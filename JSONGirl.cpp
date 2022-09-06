@@ -68,7 +68,8 @@ QHash<QString, QVariant> JSONGirl::parse(QJsonObject &p_Object, const QString &p
             foreach (QJsonValueRef item, subObj.toArray()) {
                 if(item.isObject())
                 {
-                    m_ObjMap[newKey] = parse(tmpObj, newKey);
+                    QJsonObject tmp = item.toObject();
+                    m_ObjMap[newKey] = parse(tmp, newKey);
                 }
                 else
                 {
