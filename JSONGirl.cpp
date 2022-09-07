@@ -39,6 +39,46 @@ void JSONGirl::writeJSONFile(const QString &p_FilePath, QJsonObject &p_Object)
     file.close();
 }
 
+void JSONGirl::updateJSONObject(QJsonObject &p_Object, const QString &p_Query,  QJsonValue &p_Value)
+{
+    // Address.City
+    QStringList query = p_Query.split("."); // Address, City
+    foreach (QString key, query)
+    {
+        QJsonValue subObj = p_Object.value(key);
+        QJsonObject tmpObj = subObj.toObject();
+        if(subObj.isBool())
+        {
+            qDebug() << key << "Bool";
+            tmpObj[key] = p_Value.toBool();
+        }
+        else if(subObj.isDouble())
+        {
+            qDebug() << key << "Double";
+            tmpObj[key] = p_Value.toDouble();
+        }
+        else if(subObj.isString())
+        {
+            qDebug() << key << "String";
+            tmpObj[key] = p_Value.toString();
+        }
+        else if(subObj.isArray())
+        {
+            qDebug() << key << "Array";
+        }
+        else if(subObj.isObject())
+        {
+            qDebug() << key << "Object";
+
+            foreach (QString subKey, tmpObj.keys()) {
+                updateJSONObject(tmpObj, subKey, p_Value);
+            }
+        }
+
+        p_Object[key] = tmpObj;
+    }
+}
+
 QHash<QString, QVariant> JSONGirl::parse(QJsonObject &p_Object, const QString &p_ParentKey)
 {
     foreach(QString key, p_Object.keys())
@@ -49,7 +89,7 @@ QHash<QString, QVariant> JSONGirl::parse(QJsonObject &p_Object, const QString &p
             newKey = p_ParentKey + "." + key;
         }
         QJsonValue subObj = p_Object.value(key);
-        QJsonObject tmpObj = subObj.toObject();
+
         if(subObj.isBool())
         {
             m_ObjMap[newKey] = subObj.toBool();
@@ -65,21 +105,45 @@ QHash<QString, QVariant> JSONGirl::parse(QJsonObject &p_Object, const QString &p
         else if(subObj.isArray())
         {
             QList<QJsonValue> list;
+            int index = 0;
+            /*
+                "weather": [
+                    {
+                    "id": 502,
+                    "main": "Rain",
+                    "description": "heavy intensity rain",
+                    "icon": "10d"
+                    }
+                ],
+            */
             foreach (QJsonValueRef item, subObj.toArray()) {
                 if(item.isObject())
                 {
+                    QString indicator = newKey + "[" + QString::number(index) + "]";
                     QJsonObject tmp = item.toObject();
-                    m_ObjMap[newKey] = parse(tmp, newKey);
+                    /*
+                        {
+                        "id": 502,
+                        "main": "Rain",
+                        "description": "heavy intensity rain",
+                        "icon": "10d"
+                        }
+                    */
+                    foreach (QString subKey, tmp.keys()) {
+                        m_ObjMap[indicator + "." + subKey] = parse(tmp, indicator);
+                    }
                 }
                 else
                 {
                     list += item;
                 }
+                index++;
             }
             m_ObjMap[newKey] = QVariant::fromValue(list);
         }
         else if(subObj.isObject())
         {
+            QJsonObject tmpObj = subObj.toObject();
             m_ObjMap[newKey] = parse(tmpObj, newKey);
         }
     }

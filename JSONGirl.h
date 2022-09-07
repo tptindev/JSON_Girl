@@ -15,12 +15,13 @@ class JSONGIRL_EXPORT JSONGirl
 private:
     QHash<QString, QVariant> m_ObjMap;
 public:
-  JSONGirl();
+    JSONGirl();
 
-  bool loadJSONFile(const QString &p_FilePath, QJsonDocument &p_Document);
-  void writeJSONFile(const QString &p_FilePath, QJsonObject &p_Object);
-  QHash<QString, QVariant> parse(QJsonObject &p_Object, const QString &p_ParentKey = "");
-  QString stringify(QJsonDocument &p_Document);
+    bool loadJSONFile(const QString &p_FilePath, QJsonDocument &p_Document);
+    void writeJSONFile(const QString &p_FilePath, QJsonObject &p_Object);
+    void updateJSONObject(QJsonObject &p_Object, const QString &p_Query,  QJsonValue &p_Value);
+    QHash<QString, QVariant> parse(QJsonObject &p_Object, const QString &p_ParentKey = "");
+    QString stringify(QJsonDocument &p_Document);
 
 
 };
